@@ -16,7 +16,10 @@ const email = "dingpeixuan911@gmail.com"
 const password = "passwordfortest"
 
 func InitTestApp() *golf.Application {
-	app := Initialize()
+
+	var module Module
+
+	app := module.Initialize()
 
 	app.View.SetTemplateLoader("base", "view")
 	app.View.SetTemplateLoader("admin", filepath.Join("..", "..", "view", "admin"))
@@ -34,7 +37,9 @@ func makeTestHTTPRequest(body io.Reader, method, url string) *http.Request {
 
 func mockSignUpPostRequest(email, name, password, rePassword string) *golf.Context {
 	w := httptest.NewRecorder()
-	Initialize()
+	var module Module
+
+	module.Initialize()
 
 	form := url.Values{}
 	form.Add("email", email)

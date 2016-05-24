@@ -1,25 +1,51 @@
 package handler
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/dinever/golf"
 	"github.com/dingoblog/dingo/app/model"
 	"github.com/dingoblog/dingo/app/utils"
+	"github.com/facebookgo/inject"
 )
+
+// Handler module will be used to concentrate all sub-modules & provide them with their dependencies
+type Module struct {
+	Generic GenericAPI // Temporal name for API handlers
+}
 
 var app *golf.Application
 
-func Initialize() *golf.Application {
+func (m *Module) Populate(g inject.Graph) {
+
+	// Share dependencies with structs that holds handlers
+	err := g.Provide(
+		&inject.Object{Value: &m.Generic},
+	)
+
+	if err != nil {
+		err = fmt.Errorf("failed to provide di on handler module: %v", err)
+		panic(err)
+	}
+
+	if err := g.Populate(); err != nil {
+		err = fmt.Errorf("failed to populate di: %v", err)
+		panic(err)
+	}
+}
+
+func (m *Module) Initialize() *golf.Application {
+
 	app = golf.New()
 
 	app.Config.Set("app/static_dir", "static")
 	app.Config.Set("app.log_dir", "tmp/log")
 	app.Config.Set("app/upload_dir", "upload")
 	upload_dir, _ := app.Config.GetString("app/upload_dir", "upload")
-	registerMiddlewares()
-	registerFuncMap()
+	m.registerMiddlewares()
+	m.registerFuncMap()
 	RegisterFunctions(app)
 	theme := model.GetSettingValue("theme")
 	app.View.SetTemplateLoader("base", "view")
@@ -33,14 +59,14 @@ func Initialize() *golf.Application {
 	app.SessionManager = golf.NewMemorySessionManager()
 	app.Error(404, NotFoundHandler)
 
-	registerAdminURLHandlers()
-	registerHomeHandler()
-	registerAPIHandler()
+	m.registerAdminURLHandlers()
+	m.registerHomeHandler()
+	m.registerAPIHandler()
 
 	return app
 }
 
-func registerFuncMap() {
+func (m *Module) registerFuncMap() {
 	app.View.FuncMap["DateFormat"] = utils.DateFormat
 	app.View.FuncMap["Now"] = utils.Now
 	app.View.FuncMap["Html2Str"] = utils.Html2Str
@@ -50,7 +76,7 @@ func registerFuncMap() {
 	app.View.FuncMap["Md2html"] = utils.Markdown2HtmlTemplate
 }
 
-func registerMiddlewares() {
+func (m *Module) registerMiddlewares() {
 	app.Use(
 		golf.LoggingMiddleware(os.Stdout),
 		golf.RecoverMiddleware,
@@ -58,7 +84,7 @@ func registerMiddlewares() {
 	)
 }
 
-func registerAdminURLHandlers() {
+func (m *Module) registerAdminURLHandlers() {
 	authChain := golf.NewChain(AuthMiddleware)
 	app.Get("/login/", AuthLoginPageHandler)
 	app.Post("/login/", AuthLoginHandler)
@@ -106,7 +132,7 @@ func registerAdminURLHandlers() {
 	app.Get("/admin/monitor/", authChain.Final(AdminMonitorPage))
 }
 
-func registerHomeHandler() {
+func (m *Module) registerHomeHandler() {
 	statsChain := golf.NewChain()
 	app.Get("/", statsChain.Final(HomeHandler))
 	app.Get("/page/:page/", HomeHandler)
@@ -118,13 +144,14 @@ func registerHomeHandler() {
 	app.Get("/:slug/", statsChain.Final(ContentHandler))
 }
 
-func registerAPIHandler() {
+func (m *Module) registerAPIHandler() {
 	// Auth
 	app.Post("/auth", JWTAuthLoginHandler)
 	app.Get("/auth", JWTAuthValidateHandler)
 
 	// register the API handler
 	app.Get("/api", APIDocumentationHandler)
+	app.Get("/api/ping", m.Generic.Ping)
 
 	// Posts
 	app.Get("/api/posts", APIPostsHandler)
@@ -132,7 +159,7 @@ func registerAPIHandler() {
 	app.Get("/api/posts/slug/:slug", APIPostSlugHandler)
 
 	// Tags
-	app.Get("/api/tags", APITagsHandler)
+	app.Get("/api/tags", m.Generic.GetAllTags)
 	app.Get("/api/tags/:id", APITagHandler)
 	app.Get("/api/tags/slug/:slug", APITagSlugHandler)
 

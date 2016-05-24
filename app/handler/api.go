@@ -1,10 +1,37 @@
 package handler
 
 import (
+	"strconv"
+
 	"github.com/dinever/golf"
 	"github.com/dingoblog/dingo/app/model"
-	"strconv"
+	"github.com/dingoblog/dingo/app/modules/posts"
+	"github.com/jinzhu/gorm"
 )
+
+// Generic API holds a temporary way to group API handlers and share dependencies with them
+// Even though we're currently holding a pointer to the DB we should abstract the data handling to
+// Other submodules taking advantage of the dependency injection
+type GenericAPI struct {
+	DB    *gorm.DB      `inject:""`
+	Posts *posts.Module `inject:""`
+}
+
+func (g GenericAPI) Ping(c *golf.Context) {
+
+	c.JSON(map[string]interface{}{
+		"status": "pong",
+	})
+}
+
+// Get all tags
+func (group GenericAPI) GetAllTags(c *golf.Context) {
+
+	// Expressive and cleaner
+	tags := group.Posts.GetTags()
+
+	c.JSON(tags)
+}
 
 // APIDocumentationHandler shows which routes match with what functionality,
 // similar to https://api.github.com
