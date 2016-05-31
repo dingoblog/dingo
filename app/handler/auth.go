@@ -28,7 +28,10 @@ func AuthSignUpPageHandler(ctx *golf.Context) {
 	if userNum == 0 {
 		ctx.Loader("admin").Render("signup.html", make(map[string]interface{}))
 	} else {
-		ctx.Abort(404)
+		ctx.Loader("default").Render("error_msg.html", map[string]interface{}{
+			"Reason": "No more Users",
+		})
+		// ctx.Abort(404)
 		return
 	}
 }
