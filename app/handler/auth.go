@@ -29,7 +29,7 @@ func AuthSignUpPageHandler(ctx *golf.Context) {
 		ctx.Loader("admin").Render("signup.html", make(map[string]interface{}))
 	} else {
 		ctx.Loader("default").Render("error_msg.html", map[string]interface{}{
-			"Reason": "No more Users",
+			"Reason": "New user accounts cannot be created for this blog at this time.",
 		})
 		// ctx.Abort(404)
 		return
