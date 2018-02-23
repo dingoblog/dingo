@@ -20,6 +20,7 @@ func Initialize(app *golf.Application) *golf.Application {
 	theme := model.GetSettingValue("theme")
 	app.View.SetTemplateLoader("base", "view")
 	app.View.SetTemplateLoader("admin", filepath.Join("view", "admin"))
+	app.View.SetTemplateLoader("default", filepath.Join("view", "default"))
 	app.View.SetTemplateLoader("theme", filepath.Join("view", theme))
 	//      static_dir, _ := app.Config.GetString("app/static_dir", "static")
 	app.Static("/upload/", upload_dir)

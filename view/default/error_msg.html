@@ -1,0 +1,25 @@
+{{ extends "/default.html" }}
+
+{{ define "content"}}
+<div id="content">
+  <div id="article-container" class="clear container960">
+    <section id="main">
+      <article class="article article-type-page" itemscope="" itemprop="blogPost">
+
+        <div class="article-inner">
+          <header class="article-header">
+            <h1 class="article-title" itemprop="name">
+              Oops! An error occurred:
+            </h1>
+          </header>
+          <div class="article-entry" itemprop="articleBody">
+            <p>{{ .Reason }}</p>
+            <p>You can return to our homepage by clicking <a href="/">here</a>.</p>
+          </div>
+        </div>
+      </article>
+
+    </section>
+  </div>
+</div>
+{{end}}
