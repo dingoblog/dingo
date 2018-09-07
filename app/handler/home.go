@@ -97,7 +97,7 @@ func CommentHandler(ctx *golf.Context) {
 			})
 		}
 		post.CommentNum++
-		err = post.Save()
+        err = post.Save(post.Tags()...)
 		if err != nil {
 			log.Printf("[Error]: Can not increase comment count for post %v: %v", post.Id, err.Error())
 		}
